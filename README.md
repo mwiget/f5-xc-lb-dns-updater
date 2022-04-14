@@ -80,7 +80,8 @@ $ kubectl exec -ti lb-dns-updater-5bf6cbbc79-8hcxg  -- ash
 Defaulted container "lb-dns-updater" out of: lb-dns-updater, wingman
 / # printenvKEY1=value1
 KEY2=value2
-VES_IO_PROVIDER=ves-io-AWSKUBERNETES_SERVICE_PORT=443
+VES_IO_PROVIDER=ves-io-AWS
+KUBERNETES_SERVICE_PORT=443
 KUBERNETES_PORT=tcp://10.3.0.1:443
 HOSTNAME=lb-dns-updater-5bf6cbbc79-8hcxgSHLVL=1
 HW_VERSION=
@@ -91,7 +92,8 @@ VES_IO_SITENAME=mw-tgw-1
 KUBERNETES_PORT_443_TCP_ADDR=10.3.0.1
 HW_MODEL=t3-xlarge
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-KUBERNETES_PORT_443_TCP_PORT=443VES_IO_FLEET=
+KUBERNETES_PORT_443_TCP_PORT=443
+VES_IO_FLEET=
 SITE_GROUP=mw
 KUBERNETES_PORT_443_TCP_PROTO=tcp
 PROVIDER=AWS
