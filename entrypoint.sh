@@ -17,13 +17,15 @@ curl -f -XPOST http://localhost:8070/secret/unseal -d @aws.json | base64 -d > /r
 
 while true; do
   for lb in $(vesctl configuration list http_loadbalancer -n $NAMESPACE --outfmt json | jq -r '.items[].name'); do
-    domainIp=$(vesctl configuration get  http_loadbalancer $lb -n $NAMESPACE --outfmt json | jq -r '.spec.domains[] + " " + .spec.advertise_custom.advertise_where[0].site.ip + " " + .spec.advertise_custom.advertise_where[0].site.network')
+    domainIp=$(vesctl configuration get  http_loadbalancer $lb -n $NAMESPACE --outfmt json | jq -r '.spec.domains[] + " " + .spec.advertise_custom.advertise_where[0].site.site.name+ " " + .spec.advertise_custom.advertise_where[0].site.ip + " " + .spec.advertise_custom.advertise_where[0].site.network')
     domain=$(echo $domainIp | cut -d' ' -f1)
-    ip=$(echo $domainIp | cut -d' ' -f2)
-    if [[ $ip != "SITE_NETWORK_OUTSIDE" ]]; then
-      if curl -m 2 -fs -o /dev/null -H host:$domain $ip; then
-        echo "$lb: domain=$domain ip=$ip good"
-        cat > batch-changes.json <<EOF
+    site=$(echo $domainIp | cut -d' ' -f2)
+    ip=$(echo $domainIp | cut -d' ' -f3)
+    if [[ "$site" = "$VES_IO_SITENAME" ]]; then
+      if [[ $ip != "SITE_NETWORK_OUTSIDE" ]]; then
+        if curl -m 2 -fs -o /dev/null -H host:$domain $ip; then
+          echo "$site $lb: domain=$domain ip=$ip good"
+          cat > batch-changes.json <<EOF
 {
   "Changes": [
   {
@@ -42,10 +44,10 @@ while true; do
   ]
 }
 EOF
-        aws route53 change-resource-record-sets --hosted-zone-id Z01985532A3LVOA8Z4RPJ --change-batch file://batch-changes.json
-      else
-        echo "$lb: domain=$domain ip=$ip bad"
-        cat > batch-changes.json <<EOF
+          aws route53 change-resource-record-sets --hosted-zone-id Z01985532A3LVOA8Z4RPJ --change-batch file://batch-changes.json
+        else
+          echo "$site $lb: domain=$domain ip=$ip bad"
+          cat > batch-changes.json <<EOF
 {
   "Changes": [
   {
@@ -64,7 +66,8 @@ EOF
   ]
 }
 EOF
-        aws route53 change-resource-record-sets --hosted-zone-id Z01985532A3LVOA8Z4RPJ --change-batch file://batch-changes.json
+          aws route53 change-resource-record-sets --hosted-zone-id Z01985532A3LVOA8Z4RPJ --change-batch file://batch-changes.json
+        fi
       fi
     fi
   done

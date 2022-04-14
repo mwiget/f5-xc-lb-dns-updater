@@ -59,27 +59,51 @@ mw-tgw-workload-1-to-global: domain=workload.global.example.internal ip=100.64.1
 Example A record updated:
 
 ```
-$ dig workload.global.example.internal.mwlabs.net
-                                                                                                                                                                         
-; <<>> DiG 9.16.27-RH <<>> workload.global.example.internal.mwlabs.net
-;; global options: +cmd
-;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 25111
-;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+$ host workload.tgw2.example.internal.mwlabs.net
+workload.tgw2.example.internal.mwlabs.net has address 100.64.15.254
 
-;; OPT PSEUDOSECTION:
-; EDNS: version: 0, flags:; udp: 1232
-;; QUESTION SECTION:
-;workload.global.example.internal.mwlabs.net. IN        A
+$ host workload.global.example.internal.mwlabs.net
+workload.global.example.internal.mwlabs.net has address 100.64.15.254
 
-;; ANSWER SECTION:
-workload.global.example.internal.mwlabs.net. 1 IN A 100.64.15.254
+$ host workload.tgw1.example.internal.mwlabs.net
+workload.tgw1.example.internal.mwlabs.net has address 100.64.47.254
 ```
 
-## TODO
+## Infos
 
-Need to handle cases, when a domain is only reachable from some of the VIPs but not others. As pods are doing health checks from 
-each site, the update request can collide.
+Need to do health checks with dns updates only on sites hosting the lb. The pod
+gets some nice env variables set to make that validation easy. In particular,
+the variable VES_IO_SITENAME contains what we need:
+
+```
+$ kubectl exec -ti lb-dns-updater-5bf6cbbc79-8hcxg  -- ash
+Defaulted container "lb-dns-updater" out of: lb-dns-updater, wingman
+/ # printenvKEY1=value1
+KEY2=value2
+VES_IO_PROVIDER=ves-io-AWSKUBERNETES_SERVICE_PORT=443
+KUBERNETES_PORT=tcp://10.3.0.1:443
+HOSTNAME=lb-dns-updater-5bf6cbbc79-8hcxgSHLVL=1
+HW_VERSION=
+HOME=/rootDOMAIN=eu-north-1.compute.internal
+VES_IO_SITETYPE=ves-io-ce
+TERM=xterm
+VES_IO_SITENAME=mw-tgw-1
+KUBERNETES_PORT_443_TCP_ADDR=10.3.0.1
+HW_MODEL=t3-xlarge
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+KUBERNETES_PORT_443_TCP_PORT=443VES_IO_FLEET=
+SITE_GROUP=mw
+KUBERNETES_PORT_443_TCP_PROTO=tcp
+PROVIDER=AWS
+HW_SERIAL_NUMBER=ec296232-5701-4b09-b309-75fc39a33906
+KUBERNETES_SERVICE_PORT_HTTPS=443
+KUBERNETES_PORT_443_TCP=tcp://10.3.0.1:443
+HOST_OS_VERSION=centos-7-2003-13
+KUBERNETES_SERVICE_HOST=10.3.0.1
+PWD=/
+HW_VENDOR=amazon-ec2
+```
+
 
 ## References
 
