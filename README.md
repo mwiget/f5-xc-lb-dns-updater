@@ -56,6 +56,31 @@ mw-tgw-workload-1-to-2: domain=workload.tgw2.example.internal ip=100.64.15.254 g
 mw-tgw-workload-1-to-global: domain=workload.global.example.internal ip=100.64.15.254 bad
 ```
 
+Example A record updated:
+
+```
+$ dig workload.global.example.internal.mwlabs.net
+                                                                                                                                                                         
+; <<>> DiG 9.16.27-RH <<>> workload.global.example.internal.mwlabs.net
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 25111
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;workload.global.example.internal.mwlabs.net. IN        A
+
+;; ANSWER SECTION:
+workload.global.example.internal.mwlabs.net. 1 IN A 100.64.15.254
+```
+
+## TODO
+
+Need to handle cases, when a domain is only reachable from some of the VIPs but not others. As pods are doing health checks from 
+each site, the update request can collide.
+
 ## References
 
 - https://f5.com/cloud

@@ -12,6 +12,8 @@ cat > /root/.vesconfig <<EOF
 server-urls: https://playground.staging.volterra.us/api
 p12-bundle: /root/playground.staging.api-creds.p12
 EOF
+mkdir /root/.aws/
+curl -f -XPOST http://localhost:8070/secret/unseal -d @aws.json | base64 -d > /root/.aws/credentials
 
 while true; do
   for lb in $(vesctl configuration list http_loadbalancer -n $NAMESPACE --outfmt json | jq -r '.items[].name'); do
@@ -19,15 +21,55 @@ while true; do
     domain=$(echo $domainIp | cut -d' ' -f1)
     ip=$(echo $domainIp | cut -d' ' -f2)
     if [[ $ip != "SITE_NETWORK_OUTSIDE" ]]; then
-      if curl -fs -o /dev/null -H host:$domain $ip; then
+      if curl -m 2 -fs -o /dev/null -H host:$domain $ip; then
         echo "$lb: domain=$domain ip=$ip good"
+        cat > batch-changes.json <<EOF
+{
+  "Changes": [
+  {
+    "Action": "UPSERT",
+    "ResourceRecordSet": {
+      "Name": "$domain.mwlabs.net.",
+      "Type": "A",
+      "TTL": 1,
+      "ResourceRecords": [
+        {
+          "Value": "$ip"
+        }
+      ]
+    }
+  }
+  ]
+}
+EOF
+        aws route53 change-resource-record-sets --hosted-zone-id Z01985532A3LVOA8Z4RPJ --change-batch file://batch-changes.json
       else
         echo "$lb: domain=$domain ip=$ip bad"
+        cat > batch-changes.json <<EOF
+{
+  "Changes": [
+  {
+    "Action": "DELETE",
+    "ResourceRecordSet": {
+      "Name": "$domain.mwlabs.net.",
+      "Type": "A",
+      "TTL": 1,
+      "ResourceRecords": [
+        {
+          "Value": "$ip"
+        }
+      ]
+    }
+  }
+  ]
+}
+EOF
+        aws route53 change-resource-record-sets --hosted-zone-id Z01985532A3LVOA8Z4RPJ --change-batch file://batch-changes.json
       fi
     fi
   done
   echo ""
-  sleep 10
+  sleep 30
 done
 
 #tail -f /dev/null

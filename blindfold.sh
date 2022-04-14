@@ -4,6 +4,7 @@ vesctl request secrets encrypt --policy-document secret-policy --public-key play
 echo $VES_P12_PASSWORD > /tmp/pwd
 vesctl request secrets encrypt --policy-document secret-policy --public-key playground-api-pubkey /tmp/pwd > pwd.enc
 rm /tmp/pwd
+vesctl request secrets encrypt --policy-document secret-policy --public-key playground-api-pubkey ~/.aws-private/credentials  > aws.enc
 
 cat > api-creds.json <<EOF
 {
@@ -17,4 +18,10 @@ cat > pwd.json <<EOF
   "location": "string:///$(grep -v Encrypted pwd.enc)"
 }
 EOF
-ls -l api-creds.json pwd.json
+cat > aws.json <<EOF
+{
+  "type": "blindfold",
+  "location": "string:///$(grep -v Encrypted aws.enc)"
+}
+EOF
+ls -l api-creds.json pwd.json aws.json
