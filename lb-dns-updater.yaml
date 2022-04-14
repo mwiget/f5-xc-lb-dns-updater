@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lb-dns-updater
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lb-dns-updater
+  template:
+    metadata:
+      labels:
+        app: lb-dns-updater
+    spec:
+      containers:
+      - image: marcelwiget/lb-dns-updater:latest
+        imagePullPolicy: Always
+          #        imagePullPolicy: IfNotPresent
+        name: lb-dns-updater
+        resources:
+          requests:
+            memory: "1Gi"
+          limits:
+            memory: "2Gi"
